@@ -66,7 +66,8 @@ import kotlinx.coroutines.withContext
 /**
  * Settings panel in the style of HaRemote (their SettingActivity /
  * SettingDisplayActivity, decompiled to understand the layout): live
- * brightness, Wi-Fi and Android system shortcuts, wake-on-motion, and
+ * brightness, Wi-Fi and Android system shortcuts (plus the per-screen
+ * ones in AndroidSettingsShortcuts.kt), wake-on-motion, and
  * HA/Harmony connection status — without duplicating their whole menu
  * (account, language, lock screen, etc. not covered here, addable if
  * needed).
@@ -167,6 +168,8 @@ fun SettingsMenu(ctx: CardContext) {
                 Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         }
+
+        AndroidSettingsSection()
 
         WakeOnMotionRow(ctx)
         WifiKeepAwakeRow(ctx)
@@ -459,7 +462,7 @@ private fun LongPressSlider() {
 }
 
 @Composable
-private fun SettingRow(icon: ImageVector?, label: String, onClick: () -> Unit) {
+internal fun SettingRow(icon: ImageVector?, label: String, trailingIcon: ImageVector? = null, onClick: () -> Unit) {
     Row(
         modifier =
         Modifier
@@ -472,7 +475,8 @@ private fun SettingRow(icon: ImageVector?, label: String, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         icon?.let { Icon(it, contentDescription = null, tint = LocalTheme.current.mutedText) }
-        Text(label, color = LocalTheme.current.primaryText, fontSize = 14.sp)
+        Text(label, color = LocalTheme.current.primaryText, fontSize = 14.sp, modifier = Modifier.weight(1f))
+        trailingIcon?.let { Icon(it, contentDescription = null, tint = LocalTheme.current.mutedText) }
     }
 }
 
