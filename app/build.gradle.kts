@@ -17,8 +17,29 @@ android {
         applicationId = "com.custom.astrion"
         minSdk = 26
         targetSdk = 34
-        versionCode = 29
-        versionName = "1.1.9"
+        // CI (.github/workflows/release.yml) passes a per-run build number,
+        // so every published APK has a higher versionCode and a distinct
+        // versionName ("1.1.9.<n>") that UpdateChecker sees as newer.
+        val ciBuild = (findProperty("ciBuildNumber") as String?)?.toIntOrNull()
+        versionCode = if (ciBuild != null) 1000 + ciBuild else 29
+        versionName = if (ciBuild != null) "1.1.9.$ciBuild" else "1.1.9"
+    }
+
+    // Release signing comes from environment variables set by CI from
+    // repository secrets — no keystore or password is ever committed. Using
+    // the same keystore for every build is what lets each new APK install
+    // over the previous one. Without these variables a local release build
+    // is simply left unsigned.
+    val releaseKeystore = System.getenv("ASTRION_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("ASTRION_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ASTRION_KEY_ALIAS")
+                keyPassword = System.getenv("ASTRION_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -28,6 +49,7 @@ android {
         }
         release {
             isMinifyEnabled = false
+            if (releaseKeystore != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 

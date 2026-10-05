@@ -21,6 +21,8 @@
     <string name="config_server_off_hint">Server di configurazione locale è disattivato</string>
     <string name="tap_feedback">Feedback tattile</string>
     <string name="tap_feedback_hint">Breve suono quando tocchi una scena, pulsante o punto — corrisponde ai menu Android del dispositivo.</string>
+    <string name="long_press_duration">Durata pressione prolungata</string>
+    <string name="long_press_duration_hint">Quanto tenere premuto un tasto del telecomando prima che scatti la sua azione di pressione prolungata.</string>
     <string name="brightness">Luminosità</string>
     <string name="allow_brightness_write">Consenti controllo luminosità (tocco)</string>
     <string name="settings_update_available">Aggiornamento disponibile: v%1$s</string>

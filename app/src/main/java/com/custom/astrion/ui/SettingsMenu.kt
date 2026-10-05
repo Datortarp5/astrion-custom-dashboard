@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Wifi
@@ -34,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,10 +52,12 @@ import androidx.compose.ui.unit.sp
 import com.custom.astrion.BuildConfig
 import com.custom.astrion.R
 import com.custom.astrion.cards.CardContext
+import com.custom.astrion.config.LongPressSetting
 import com.custom.astrion.ha.ConnectionState
 import com.custom.astrion.update.UpdateChecker
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import kotlin.math.roundToLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -168,6 +172,7 @@ fun SettingsMenu(ctx: CardContext) {
         WifiKeepAwakeRow(ctx)
         ConfigServerRow(ctx)
         TapFeedbackRow(ctx)
+        LongPressSlider()
     }
 }
 
@@ -407,6 +412,46 @@ private fun TapFeedbackRow(ctx: CardContext) {
         }
         Text(
             stringResource(R.string.tap_feedback_hint),
+            color = LocalTheme.current.mutedText,
+            fontSize = 11.sp
+        )
+    }
+}
+
+/**
+ * "Long-press duration" slider — how long a physical button has to be held
+ * before its long-press hotkey fires instead of its short one. 0.1 s steps;
+ * the value is only persisted once the drag ends, so dragging doesn't write
+ * SharedPreferences on every frame.
+ */
+@Composable
+private fun LongPressSlider() {
+    val context = LocalContext.current
+    var ms by remember { mutableLongStateOf(LongPressSetting.load(context)) }
+    val stepMs = 100L
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Icon(Icons.Filled.Timer, contentDescription = null, tint = LocalTheme.current.mutedText)
+            Text(stringResource(R.string.long_press_duration), color = LocalTheme.current.primaryText, fontSize = 14.sp)
+            Spacer(Modifier.weight(1f))
+            Text("${ms / 1000}.${(ms % 1000) / stepMs} s", color = LocalTheme.current.mutedText, fontSize = 13.sp)
+        }
+        Slider(
+            value = ms.toFloat(),
+            valueRange = LongPressSetting.MIN_MS.toFloat()..LongPressSetting.MAX_MS.toFloat(),
+            steps = ((LongPressSetting.MAX_MS - LongPressSetting.MIN_MS) / stepMs - 1).toInt(),
+            onValueChange = { v -> ms = (v / stepMs).roundToLong() * stepMs },
+            onValueChangeFinished = { ms = LongPressSetting.save(context, ms) },
+            colors =
+            SliderDefaults.colors(
+                thumbColor = LocalTheme.current.accent,
+                activeTrackColor = LocalTheme.current.accent,
+                inactiveTrackColor = LocalTheme.current.controlBackground
+            )
+        )
+        Text(
+            stringResource(R.string.long_press_duration_hint),
             color = LocalTheme.current.mutedText,
             fontSize = 11.sp
         )
