@@ -45,6 +45,7 @@ import com.custom.astrion.config.IrDatabaseRuntime
 import com.custom.astrion.config.IrStepConfig
 import com.custom.astrion.config.IrTarget
 import com.custom.astrion.config.JsonPlain
+import com.custom.astrion.config.LongPressSetting
 import com.custom.astrion.config.RemoteSettings
 import com.custom.astrion.extender.ExtenderRegistry
 import com.custom.astrion.ha.HaClient
@@ -84,7 +85,6 @@ class MainActivity : ComponentActivity() {
         const val KEY_TAG = "AstrionKeys"
         const val MOTION_TAG = "MotionWake"
         const val SCREEN_TAG = "ScreenTimeout"
-        const val LONG_PRESS_MS = 1500L
         const val TILT_WAKE_DEG = 30f
         const val LIN_ACC_WAKE = 2.5f
         const val MOTION_CONSECUTIVE_N = 3
@@ -902,7 +902,7 @@ class MainActivity : ComponentActivity() {
                                 longH.invoke()
                             }
                         pendingLong = r
-                        keyHandler.postDelayed(r, LONG_PRESS_MS)
+                        keyHandler.postDelayed(r, LongPressSetting.load(this))
                     }
                 } else {
                     fireButtonTap()
