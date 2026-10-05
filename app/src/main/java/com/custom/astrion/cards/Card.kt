@@ -66,20 +66,8 @@ data class DeviceSettingsState(
      * [com.custom.astrion.ui.LocalTapFeedback] + Modifier.tapClickable);
      * when off they stay silent. See TapFeedback.kt for details. */
     val tapFeedbackEnabled: Boolean = true,
-    val setTapFeedbackEnabled: (Boolean) -> Unit = {},
-    /** How long a physical button must be held before its long-press
-     * hotkey fires, in milliseconds, and a way to change it — used by the
-     * settings page's long-press slider. Persisted by MainActivity. */
-    val longPressMs: Long = DEFAULT_LONG_PRESS_MS,
-    val setLongPressMs: (Long) -> Unit = {}
+    val setTapFeedbackEnabled: (Boolean) -> Unit = {}
 )
-
-/** Default hold time for a physical button's long-press hotkey. */
-const val DEFAULT_LONG_PRESS_MS = 1000L
-
-/** Range offered by the settings page's long-press slider. */
-const val MIN_LONG_PRESS_MS = 300L
-const val MAX_LONG_PRESS_MS = 3000L
 
 /**
  * Context handed to every card render.

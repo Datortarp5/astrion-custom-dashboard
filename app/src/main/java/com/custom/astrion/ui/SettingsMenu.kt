@@ -52,8 +52,7 @@ import androidx.compose.ui.unit.sp
 import com.custom.astrion.BuildConfig
 import com.custom.astrion.R
 import com.custom.astrion.cards.CardContext
-import com.custom.astrion.cards.MAX_LONG_PRESS_MS
-import com.custom.astrion.cards.MIN_LONG_PRESS_MS
+import com.custom.astrion.config.LongPressSetting
 import com.custom.astrion.ha.ConnectionState
 import com.custom.astrion.update.UpdateChecker
 import java.net.Inet4Address
@@ -173,7 +172,7 @@ fun SettingsMenu(ctx: CardContext) {
         WifiKeepAwakeRow(ctx)
         ConfigServerRow(ctx)
         TapFeedbackRow(ctx)
-        LongPressSlider(ctx)
+        LongPressSlider()
     }
 }
 
@@ -426,8 +425,9 @@ private fun TapFeedbackRow(ctx: CardContext) {
  * SharedPreferences on every frame.
  */
 @Composable
-private fun LongPressSlider(ctx: CardContext) {
-    var ms by remember(ctx.deviceSettings.longPressMs) { mutableLongStateOf(ctx.deviceSettings.longPressMs) }
+private fun LongPressSlider() {
+    val context = LocalContext.current
+    var ms by remember { mutableLongStateOf(LongPressSetting.load(context)) }
     val stepMs = 100L
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -439,10 +439,10 @@ private fun LongPressSlider(ctx: CardContext) {
         }
         Slider(
             value = ms.toFloat(),
-            valueRange = MIN_LONG_PRESS_MS.toFloat()..MAX_LONG_PRESS_MS.toFloat(),
-            steps = ((MAX_LONG_PRESS_MS - MIN_LONG_PRESS_MS) / stepMs - 1).toInt(),
+            valueRange = LongPressSetting.MIN_MS.toFloat()..LongPressSetting.MAX_MS.toFloat(),
+            steps = ((LongPressSetting.MAX_MS - LongPressSetting.MIN_MS) / stepMs - 1).toInt(),
             onValueChange = { v -> ms = (v / stepMs).roundToLong() * stepMs },
-            onValueChangeFinished = { ctx.deviceSettings.setLongPressMs(ms) },
+            onValueChangeFinished = { ms = LongPressSetting.save(context, ms) },
             colors =
             SliderDefaults.colors(
                 thumbColor = LocalTheme.current.accent,

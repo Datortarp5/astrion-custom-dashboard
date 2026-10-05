@@ -30,17 +30,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
-import com.custom.astrion.cards.DEFAULT_LONG_PRESS_MS
 import com.custom.astrion.cards.DeviceSettingsState
-import com.custom.astrion.cards.MAX_LONG_PRESS_MS
-import com.custom.astrion.cards.MIN_LONG_PRESS_MS
 import com.custom.astrion.config.ActivityRuntime
 import com.custom.astrion.config.DashboardConfig
 import com.custom.astrion.config.DashboardLoader
@@ -49,6 +45,7 @@ import com.custom.astrion.config.IrDatabaseRuntime
 import com.custom.astrion.config.IrStepConfig
 import com.custom.astrion.config.IrTarget
 import com.custom.astrion.config.JsonPlain
+import com.custom.astrion.config.LongPressSetting
 import com.custom.astrion.config.RemoteSettings
 import com.custom.astrion.extender.ExtenderRegistry
 import com.custom.astrion.ha.HaClient
@@ -407,11 +404,6 @@ class MainActivity : ComponentActivity() {
      * dot, etc. Plays the system touch sound (AudioManager.FX_KEY_CLICK). */
     private var tapFeedbackEnabled by mutableStateOf(true)
 
-    /** Backing state for the settings page's long-press slider — how long
-     * a physical button must be held before its long-press hotkey fires.
-     * Persisted, and read live by dispatchKeyEvent() on every press. */
-    private var longPressMs by mutableLongStateOf(DEFAULT_LONG_PRESS_MS)
-
     private val storagePermission =
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -468,10 +460,6 @@ class MainActivity : ComponentActivity() {
             )
         configServerEnabled = prefs.getBoolean("config_server_enabled", true)
         tapFeedbackEnabled = prefs.getBoolean("tap_feedback_enabled", true)
-        longPressMs =
-            prefs
-                .getLong("long_press_ms", DEFAULT_LONG_PRESS_MS)
-                .coerceIn(MIN_LONG_PRESS_MS, MAX_LONG_PRESS_MS)
         wifiKeepAwakeEnabled = prefs.getBoolean("wifi_keep_awake_enabled", false)
         if (wifiKeepAwakeEnabled) acquireWifiLock()
         if (configServerEnabled) configServerSupervisor.start()
@@ -597,9 +585,7 @@ class MainActivity : ComponentActivity() {
                             configServerEnabled = configServerEnabled,
                             setConfigServerEnabled = { enabled -> updateConfigServerEnabled(enabled) },
                             tapFeedbackEnabled = tapFeedbackEnabled,
-                            setTapFeedbackEnabled = { enabled -> setTapFeedback(enabled) },
-                            longPressMs = longPressMs,
-                            setLongPressMs = { ms -> setLongPress(ms) }
+                            setTapFeedbackEnabled = { enabled -> setTapFeedback(enabled) }
                         ),
                         screenOn = screenOn && !isDocked
                     ),
@@ -916,7 +902,7 @@ class MainActivity : ComponentActivity() {
                                 longH.invoke()
                             }
                         pendingLong = r
-                        keyHandler.postDelayed(r, longPressMs)
+                        keyHandler.postDelayed(r, LongPressSetting.load(this))
                     }
                 } else {
                     fireButtonTap()
@@ -1056,13 +1042,6 @@ class MainActivity : ComponentActivity() {
     private fun setTapFeedback(enabled: Boolean) {
         tapFeedbackEnabled = enabled
         prefs.edit { putBoolean("tap_feedback_enabled", enabled) }
-    }
-
-    /** Called from the settings page's long-press slider — persists the
-     * hold time, no restart needed: the next key press already uses it. */
-    private fun setLongPress(ms: Long) {
-        longPressMs = ms.coerceIn(MIN_LONG_PRESS_MS, MAX_LONG_PRESS_MS)
-        prefs.edit { putLong("long_press_ms", longPressMs) }
     }
 
     /** Fires the tap sound for a hardware-button press — the button-press
