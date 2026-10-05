@@ -1,0 +1,119 @@
+name: Release APK
+
+# Builds a signed release APK on every push to dev/main (and on demand),
+# uploads it as a workflow artifact, and publishes it as a GitHub Release —
+# which is what the in-app UpdateChecker looks for.
+#
+# Signing uses one fixed keystore stored in repository secrets, so every new
+# APK installs over the previous one:
+#   KEYSTORE_BASE64    the .jks/.p12 keystore file, base64-encoded
+#   KEYSTORE_PASSWORD  the keystore password
+#   KEY_ALIAS          the key alias inside the keystore
+#   KEY_PASSWORD       the key password (optional, defaults to KEYSTORE_PASSWORD)
+#
+# Pull requests only build and upload the artifact (no Release). If the
+# secrets aren't available there, the PR build is signed with a throwaway key
+# just to prove the release build works — that APK won't update a real install.
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub Release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Prepare signing keystore
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ks="$RUNNER_TEMP/release.keystore"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$ks"
+            # Secret values stay masked in the logs even via GITHUB_ENV.
+            {
+              echo "ASTRION_KEYSTORE_FILE=$ks"
+              echo "ASTRION_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "ASTRION_KEY_ALIAS=$KEY_ALIAS"
+              echo "ASTRION_KEY_PASSWORD=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+            } >> "$GITHUB_ENV"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "::warning::KEYSTORE_BASE64 secret not set — signing this PR build with a throwaway key. Its APK will not install over a real release."
+            keytool -genkeypair -keystore "$ks" -storetype PKCS12 -storepass throwaway \
+              -alias throwaway -keyalg RSA -keysize 2048 -validity 1 \
+              -dname "CN=Throwaway PR build" -noprompt
+            {
+              echo "ASTRION_KEYSTORE_FILE=$ks"
+              echo "ASTRION_KEYSTORE_PASSWORD=throwaway"
+              echo "ASTRION_KEY_ALIAS=throwaway"
+              echo "ASTRION_KEY_PASSWORD=throwaway"
+            } >> "$GITHUB_ENV"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Repository secrets KEYSTORE_BASE64, KEYSTORE_PASSWORD and KEY_ALIAS are required to publish a signed release (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease -PciBuildNumber=${{ github.run_number }}
+
+      - name: Verify signature and name the APK
+        id: apk
+        run: |
+          apk=app/build/outputs/apk/release/app-release.apk
+          tools="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)"
+          "${tools}apksigner" verify --print-certs "$apk"
+          # Read the version straight from the APK so it always matches build.gradle.kts.
+          version="$("${tools}aapt2" dump badging "$apk" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")"
+          test -n "$version"
+          out="astrion-custom-dashboard-$version.apk"
+          cp "$apk" "$out"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "file=$out" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.file }}
+          path: ${{ steps.apk.outputs.file }}
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: github.event_name != 'pull_request' && steps.keystore.outputs.signed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.apk.outputs.version }}" "${{ steps.apk.outputs.file }}" \
+            --target "$GITHUB_SHA" \
+            --title "v${{ steps.apk.outputs.version }}" \
+            --generate-notes \
+            --latest

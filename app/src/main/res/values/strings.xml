@@ -21,6 +21,8 @@
     <string name="config_server_off_hint">Local config server is off</string>
     <string name="tap_feedback">Tap feedback</string>
     <string name="tap_feedback_hint">Short tick sound when you tap a scene, button, or dot — matches the device\'s own Android menus.</string>
+    <string name="long_press_duration">Long-press duration</string>
+    <string name="long_press_duration_hint">How long to hold a remote button before its long-press action fires.</string>
     <string name="brightness">Brightness</string>
     <string name="allow_brightness_write">Allow brightness control (tap)</string>
     <string name="settings_update_available">Update available: v%1$s</string>

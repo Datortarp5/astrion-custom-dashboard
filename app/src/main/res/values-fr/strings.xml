@@ -21,6 +21,8 @@
     <string name="config_server_off_hint">Serveur de configuration local désactivé</string>
     <string name="tap_feedback">Retour tactile</string>
     <string name="tap_feedback_hint">Léger clic sonore quand vous tapotez une scène, un bouton ou un point — identique aux menus Android de l\'appareil.</string>
+    <string name="long_press_duration">Durée de l\'appui long</string>
+    <string name="long_press_duration_hint">Durée pendant laquelle maintenir un bouton de la télécommande avant que son action d\'appui long ne se déclenche.</string>
     <string name="brightness">Luminosité</string>
     <string name="allow_brightness_write">Autoriser la modification (appuyer)</string>
     <string name="settings_update_available">Mise à jour disponible : v%1$s</string>
