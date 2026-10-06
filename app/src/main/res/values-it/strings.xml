@@ -25,6 +25,9 @@
     <string name="long_press_duration_hint">Quanto tenere premuto un tasto del telecomando prima che scatti la sua azione di pressione prolungata.</string>
     <string name="clock_24_hour">Orologio 24 ore</string>
     <string name="clock_24_hour_hint">Disattivato: 9:41 PM, attivato: 21:41. Tutti gli orologi del telecomando seguono questa impostazione.</string>
+    <string name="screensaver">Salvaschermo orologio</string>
+    <string name="screensaver_hint">Orologio grande e prossima sveglia dopo questo tempo senza tocchi o pressioni di tasti. Il primo tocco o pressione lo risveglia soltanto. In carica lo schermo resta acceso; a batteria si spegne comunque secondo il timeout di Android.</string>
+    <string name="screensaver_off">Disattivato</string>
     <string name="android_settings_more">Altre impostazioni Android</string>
     <string name="stock_astrion_settings">Impostazioni Astrion originali</string>
     <string name="stock_astrion_app">App Astrion originale (HaRemote)</string>

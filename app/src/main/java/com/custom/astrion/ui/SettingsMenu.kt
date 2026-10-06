@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SettingsSuggest
@@ -55,10 +56,12 @@ import com.custom.astrion.R
 import com.custom.astrion.cards.CardContext
 import com.custom.astrion.config.ClockFormatSetting
 import com.custom.astrion.config.LongPressSetting
+import com.custom.astrion.config.ScreensaverSetting
 import com.custom.astrion.ha.ConnectionState
 import com.custom.astrion.update.UpdateChecker
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -179,6 +182,7 @@ fun SettingsMenu(ctx: CardContext) {
         TapFeedbackRow(ctx)
         LongPressSlider()
         ClockFormatRow()
+        ScreensaverSlider()
     }
 }
 
@@ -489,6 +493,56 @@ private fun ClockFormatRow() {
         }
         Text(
             stringResource(R.string.clock_24_hour_hint),
+            color = LocalTheme.current.mutedText,
+            fontSize = 11.sp
+        )
+    }
+}
+
+/**
+ * "Clock screensaver" slider — how long without a touch or button press
+ * before the big clock + next alarm screensaver comes up, from Off to 30 min
+ * (see [ScreensaverSetting.CHOICES_S]). Saved once the drag ends, like the
+ * long-press slider; the idle countdown restarts with the new delay the
+ * moment the saved value changes (see ScreensaverLayer).
+ */
+@Composable
+private fun ScreensaverSlider() {
+    val context = LocalContext.current
+    val choices = ScreensaverSetting.CHOICES_S
+    var index by remember { mutableIntStateOf(choices.indexOf(ScreensaverSetting.idleSeconds(context)).coerceAtLeast(0)) }
+    val seconds = choices[index]
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Icon(Icons.Filled.Brightness3, contentDescription = null, tint = LocalTheme.current.mutedText)
+            Text(stringResource(R.string.screensaver), color = LocalTheme.current.primaryText, fontSize = 14.sp)
+            Spacer(Modifier.weight(1f))
+            Text(
+                when {
+                    seconds == 0 -> stringResource(R.string.screensaver_off)
+                    seconds < 60 -> "$seconds s"
+                    else -> "${seconds / 60} min"
+                },
+                color = LocalTheme.current.mutedText,
+                fontSize = 13.sp
+            )
+        }
+        Slider(
+            value = index.toFloat(),
+            valueRange = 0f..(choices.size - 1).toFloat(),
+            steps = choices.size - 2,
+            onValueChange = { v -> index = v.roundToInt().coerceIn(0, choices.size - 1) },
+            onValueChangeFinished = { ScreensaverSetting.setIdleSeconds(context, choices[index]) },
+            colors =
+            SliderDefaults.colors(
+                thumbColor = LocalTheme.current.accent,
+                activeTrackColor = LocalTheme.current.accent,
+                inactiveTrackColor = LocalTheme.current.controlBackground
+            )
+        )
+        Text(
+            stringResource(R.string.screensaver_hint),
             color = LocalTheme.current.mutedText,
             fontSize = 11.sp
         )

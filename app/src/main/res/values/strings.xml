@@ -25,6 +25,9 @@
     <string name="long_press_duration_hint">How long to hold a remote button before its long-press action fires.</string>
     <string name="clock_24_hour">24-hour clock</string>
     <string name="clock_24_hour_hint">Off shows 9:41 PM, on shows 21:41. Every clock on the remote follows this.</string>
+    <string name="screensaver">Clock screensaver</string>
+    <string name="screensaver_hint">Big clock and next alarm after this long without a touch or button press. The first touch or press only wakes it. While charging it keeps the screen on; on battery the screen still turns off on Android\'s own timeout.</string>
+    <string name="screensaver_off">Off</string>
     <string name="android_settings_more">More Android settings</string>
     <string name="stock_astrion_settings">Stock Astrion settings</string>
     <string name="stock_astrion_app">Stock Astrion app (HaRemote)</string>
