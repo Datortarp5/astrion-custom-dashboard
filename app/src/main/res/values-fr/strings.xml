@@ -207,4 +207,31 @@
     <string name="media_state_on">Allumé</string>
     <string name="media_state_off">Éteint</string>
     <string name="volume_muted">Muet</string>
+
+    <!-- Alarms (alarm/) -->
+    <string name="alarms_title">Alarmes</string>
+    <string name="alarms_none">Aucune</string>
+    <string name="alarms_empty">Aucune alarme pour l\'instant. Ajoutez-en une ci-dessous.</string>
+    <string name="alarm_add">Ajouter une alarme</string>
+    <string name="alarm_new">Nouvelle alarme</string>
+    <string name="alarm_edit">Modifier l\'alarme</string>
+    <string name="cancel">Annuler</string>
+    <string name="alarm_label">Nom (facultatif)</string>
+    <string name="alarm_sound">Son</string>
+    <string name="alarm_sound_default">Son d\'alarme par défaut</string>
+    <string name="alarm_sound_beep">Bip</string>
+    <string name="alarm_volume">Volume</string>
+    <string name="alarm_snooze_length">Durée de la répétition</string>
+    <string name="alarm_minutes">%1$d min</string>
+    <string name="alarm_save">Enregistrer</string>
+    <string name="alarm_delete">Supprimer l\'alarme</string>
+    <string name="alarm_once">Une fois</string>
+    <string name="alarm_every_day">Tous les jours</string>
+    <string name="alarm_weekdays">En semaine</string>
+    <string name="alarm_weekends">Le week-end</string>
+    <string name="alarm_snoozed_until">Répétée à %1$s</string>
+    <string name="alarm_ringing">Alarme</string>
+    <string name="alarm_snooze">Répéter</string>
+    <string name="alarm_snooze_for">Répéter dans %1$d min</string>
+    <string name="alarm_dismiss">Arrêter</string>
 </resources>

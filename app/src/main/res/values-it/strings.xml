@@ -207,4 +207,31 @@
     <string name="media_state_on">Attivo</string>
     <string name="media_state_off">Inattivo</string>
     <string name="volume_muted">Muto</string>
+
+    <!-- Alarms (alarm/) -->
+    <string name="alarms_title">Sveglie</string>
+    <string name="alarms_none">Nessuna</string>
+    <string name="alarms_empty">Ancora nessuna sveglia. Aggiungine una qui sotto.</string>
+    <string name="alarm_add">Aggiungi sveglia</string>
+    <string name="alarm_new">Nuova sveglia</string>
+    <string name="alarm_edit">Modifica sveglia</string>
+    <string name="cancel">Annulla</string>
+    <string name="alarm_label">Etichetta (facoltativa)</string>
+    <string name="alarm_sound">Suono</string>
+    <string name="alarm_sound_default">Suono sveglia predefinito</string>
+    <string name="alarm_sound_beep">Bip</string>
+    <string name="alarm_volume">Volume</string>
+    <string name="alarm_snooze_length">Durata posticipo</string>
+    <string name="alarm_minutes">%1$d min</string>
+    <string name="alarm_save">Salva</string>
+    <string name="alarm_delete">Elimina sveglia</string>
+    <string name="alarm_once">Una volta</string>
+    <string name="alarm_every_day">Ogni giorno</string>
+    <string name="alarm_weekdays">Giorni feriali</string>
+    <string name="alarm_weekends">Fine settimana</string>
+    <string name="alarm_snoozed_until">Posticipata alle %1$s</string>
+    <string name="alarm_ringing">Sveglia</string>
+    <string name="alarm_snooze">Posticipa</string>
+    <string name="alarm_snooze_for">Posticipa di %1$d min</string>
+    <string name="alarm_dismiss">Disattiva</string>
 </resources>

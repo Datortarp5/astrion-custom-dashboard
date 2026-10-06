@@ -1,6 +1,7 @@
 package com.custom.astrion
 
 import android.app.Application
+import com.custom.astrion.alarm.AlarmScheduler
 import com.custom.astrion.cards.CardRegistry
 import com.custom.astrion.cards.impl.AppleTvRemoteCard
 import com.custom.astrion.cards.impl.ButtonGridCard
@@ -65,5 +66,7 @@ class AstrionApp : Application() {
             VacuumCard()
             // ← Register your own card types here
         )
+        // Every app start re-checks that Android has the next alarm, e.g. after a force-stop dropped it.
+        AlarmScheduler.reschedule(this)
     }
 }

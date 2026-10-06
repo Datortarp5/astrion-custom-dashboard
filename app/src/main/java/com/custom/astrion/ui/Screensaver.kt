@@ -142,9 +142,9 @@ private fun KeepScreenOn(enabled: Boolean) {
     }
 }
 
-/** Current time, refreshed right on each minute boundary. */
+/** Current time, refreshed right on each minute boundary. Also used by the alarm ringing screen. */
 @Composable
-private fun rememberMinuteTick(): Long {
+internal fun rememberMinuteTick(): Long {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -160,8 +160,8 @@ private fun nextAlarmClockMs(context: Context): Long? = runCatching {
 }.getOrNull()
 
 /** "Tue 7:30 AM" / "mar. 07:30" — the weekday in the device language, the
- * time per the 12h/24h switch. */
-private fun alarmText(context: Context, ms: Long): String {
+ * time per the 12h/24h switch. Also shown on the Settings panel's Alarms row. */
+internal fun alarmText(context: Context, ms: Long): String {
     val day = SimpleDateFormat("EEE", Locale.getDefault()).format(Date(ms))
     return "$day ${ClockFormatSetting.formatTime(context, Date(ms))}"
 }

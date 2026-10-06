@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.custom.astrion.BuildConfig
 import com.custom.astrion.R
+import com.custom.astrion.alarm.AlarmsSettingRow
 import com.custom.astrion.cards.CardContext
 import com.custom.astrion.config.ClockFormatSetting
 import com.custom.astrion.config.LongPressSetting
@@ -183,6 +184,7 @@ fun SettingsMenu(ctx: CardContext) {
         LongPressSlider()
         ClockFormatRow()
         ScreensaverSlider()
+        AlarmsSettingRow()
     }
 }
 
