@@ -189,8 +189,9 @@ fun AlarmsSettingRow() {
     val context = LocalContext.current
     val alarms by AlarmStore.alarms(context).collectAsState()
     val snoozes by AlarmStore.snoozes(context).collectAsState()
-    val is24Hour = ClockFormatSetting.is24Hour(context)
-    val next = remember(alarms, snoozes, is24Hour) { AlarmScheduler.next(context)?.let { alarmText(context, it.atMs) } }
+    val nextAtMs: Long? = remember(alarms, snoozes) { AlarmScheduler.next(context)?.atMs }
+    // Formatted in composition so a 12/24-hour switch shows right away.
+    val next: String? = nextAtMs?.let { alarmText(context, it) }
     val shape = RoundedCornerShape(12.dp)
 
     Row(

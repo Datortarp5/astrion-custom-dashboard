@@ -78,10 +78,6 @@ android {
         // parse if you ever wire up annotations on the PR.
         htmlReport = true
         xmlReport = true
-        // Every issue also goes to the build log, not just the first one, so
-        // a red CI run says what to fix without downloading the report.
-        textReport = true
-        textOutput = file("stdout")
         // Baseline: uncomment once you've triaged the current backlog of
         // warnings, to lock in "no new lint issues" without fixing everything
         // that already exists first.
