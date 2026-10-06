@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.custom.astrion.cards.CardConfig
 import com.custom.astrion.cards.CardContext
 import com.custom.astrion.cards.CardRenderer
+import com.custom.astrion.config.ClockFormatSetting
 import com.custom.astrion.ha.HaLabels
 import com.custom.astrion.ui.ThemeColors
 import java.text.SimpleDateFormat
@@ -43,7 +45,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 
 /**
- * Clock + weather header. Big local time (device clock), date, current
+ * Clock + weather header. Big local time (device clock, 12h or 24h per the
+ * Settings switch, see [ClockFormatSetting]), date, current
  * condition + temperature from a `weather.*` entity, and — below the current
  * info, full width — a multi-day forecast with a min→max temperature gradient
  * bar per day (styled like the HA clock-weather-card).
@@ -58,10 +61,11 @@ import kotlinx.serialization.json.booleanOrNull
  * Config shape:
  *   { "type": "clock_weather", "options": {
  *       "entity_id": "weather.forecast_home",
- *       "time_format": 12,
  *       "forecast_rows": 4,
  *       "calendar_entity": "calendar.family"
  *   } }
+ * An older per-card `"time_format": 12|24` option is ignored now: every
+ * clock follows the one Settings switch.
  */
 class ClockWeatherCard : CardRenderer {
     override val type = "clock_weather"
@@ -70,7 +74,7 @@ class ClockWeatherCard : CardRenderer {
     override fun Render(config: CardConfig, ctx: CardContext) {
         val entityId = config.string("entity_id") ?: "weather.forecast_home"
         val e = ctx.entities[entityId]
-        val is24 = config.int("time_format", 12) == 24
+        val is24 = ClockFormatSetting.is24Hour(LocalContext.current)
         val forecastRows = config.int("forecast_rows", 4)
         val calendarEntity = config.string("calendar_entity")
 
@@ -81,10 +85,7 @@ class ClockWeatherCard : CardRenderer {
                 delay(10_000)
             }
         }
-        val timeFmt =
-            remember(is24) {
-                SimpleDateFormat(if (is24) "HH:mm" else "h:mm a", Locale.getDefault())
-            }
+        val timeFmt = remember(is24) { SimpleDateFormat(ClockFormatSetting.pattern(is24), Locale.getDefault()) }
         val dateFmt = remember { SimpleDateFormat("EEE, d MMM", Locale.getDefault()) }
 
         // Fetch the forecast via the service; refresh every 30 min.
@@ -104,7 +105,7 @@ class ClockWeatherCard : CardRenderer {
         // Today's calendar event, if the entity's next/current event happens
         // to fall today — cheap to compute (no extra HTTP call), and kept to
         // one thin line so it barely adds height.
-        val todayEvent = calendarEntity?.let { todaysEvent(ctx.entities[it], now) }
+        val todayEvent = calendarEntity?.let { todaysEvent(ctx.entities[it], now, is24) }
 
         Column(
             modifier =
@@ -252,7 +253,7 @@ class ClockWeatherCard : CardRenderer {
      * over the WebSocket state, only this one. Show it only if that event's
      * date is today, so a distant next event doesn't sit here for days.
      */
-    private fun todaysEvent(e: com.custom.astrion.ha.EntityState?, nowMs: Long): String? {
+    private fun todaysEvent(e: com.custom.astrion.ha.EntityState?, nowMs: Long, is24: Boolean): String? {
         e ?: return null
         val message = e.attrString("message") ?: return null
         val startStr = e.attrString("start_time") ?: return null
@@ -264,7 +265,7 @@ class ClockWeatherCard : CardRenderer {
         if (dayFmt.format(start) != dayFmt.format(Date(nowMs))) return null
 
         if (allDay) return message
-        val timeFmt = SimpleDateFormat("h:mm a", Locale.getDefault())
+        val timeFmt = SimpleDateFormat(ClockFormatSetting.pattern(is24), Locale.getDefault())
         val endStr = e.attrString("end_time")
         val end = endStr?.let { runCatching { fmt.parse(it) }.getOrNull() }
         val range = if (end != null) "${timeFmt.format(start)}–${timeFmt.format(end)}" else timeFmt.format(start)
