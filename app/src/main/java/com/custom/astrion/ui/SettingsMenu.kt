@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessMedium
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Timer
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.custom.astrion.BuildConfig
 import com.custom.astrion.R
 import com.custom.astrion.cards.CardContext
+import com.custom.astrion.config.ClockFormatSetting
 import com.custom.astrion.config.LongPressSetting
 import com.custom.astrion.ha.ConnectionState
 import com.custom.astrion.update.UpdateChecker
@@ -176,6 +178,7 @@ fun SettingsMenu(ctx: CardContext) {
         ConfigServerRow(ctx)
         TapFeedbackRow(ctx)
         LongPressSlider()
+        ClockFormatRow()
     }
 }
 
@@ -455,6 +458,37 @@ private fun LongPressSlider() {
         )
         Text(
             stringResource(R.string.long_press_duration_hint),
+            color = LocalTheme.current.mutedText,
+            fontSize = 11.sp
+        )
+    }
+}
+
+/**
+ * "24-hour clock" switch — the one 12h/24h choice every clock on the
+ * remote follows (status bar, clock cards...), see [ClockFormatSetting].
+ * Starts from Android's own setting until it's flipped here.
+ */
+@Composable
+private fun ClockFormatRow() {
+    val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(Icons.Filled.Schedule, contentDescription = null, tint = LocalTheme.current.mutedText)
+            Text(stringResource(R.string.clock_24_hour), color = LocalTheme.current.primaryText, fontSize = 14.sp)
+            Spacer(Modifier.weight(1f))
+            Switch(
+                checked = ClockFormatSetting.is24Hour(context),
+                onCheckedChange = { ClockFormatSetting.set24Hour(context, it) },
+                colors = SwitchDefaults.colors(checkedTrackColor = LocalTheme.current.accent)
+            )
+        }
+        Text(
+            stringResource(R.string.clock_24_hour_hint),
             color = LocalTheme.current.mutedText,
             fontSize = 11.sp
         )

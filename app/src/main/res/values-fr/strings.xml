@@ -23,6 +23,8 @@
     <string name="tap_feedback_hint">Léger clic sonore quand vous tapotez une scène, un bouton ou un point — identique aux menus Android de l\'appareil.</string>
     <string name="long_press_duration">Durée de l\'appui long</string>
     <string name="long_press_duration_hint">Durée pendant laquelle maintenir un bouton de la télécommande avant que son action d\'appui long ne se déclenche.</string>
+    <string name="clock_24_hour">Horloge 24 heures</string>
+    <string name="clock_24_hour_hint">Désactivé : 9:41 PM, activé : 21:41. Toutes les horloges de la télécommande suivent ce réglage.</string>
     <string name="android_settings_more">Plus de paramètres Android</string>
     <string name="stock_astrion_settings">Paramètres Astrion d\'origine</string>
     <string name="stock_astrion_app">Application Astrion d\'origine (HaRemote)</string>

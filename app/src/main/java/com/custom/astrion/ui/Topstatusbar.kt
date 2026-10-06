@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,9 +44,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.text.SimpleDateFormat
+import com.custom.astrion.config.ClockFormatSetting
 import java.util.Date
-import java.util.Locale
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -156,26 +156,18 @@ fun batteryGlyph(percent: Int, charging: Boolean, modifier: Modifier = Modifier.
     }
 }
 
+/** Formatted in composition (not in the ticking loop) so flipping the
+ * Settings 12h/24h switch redraws the clock right away, not on the next tick. */
 @Composable
 private fun rememberTickingTime(context: Context): String {
-    var time by remember {
-        mutableStateOf(formatNow(context))
-    }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
-            time = formatNow(context)
+            now = System.currentTimeMillis()
             kotlinx.coroutines.delay(15.seconds)
         }
     }
-    return time
-}
-
-private fun formatNow(context: Context): String {
-    val is24 =
-        android.text.format.DateFormat
-            .is24HourFormat(context)
-    val pattern = if (is24) "HH:mm" else "h:mm a"
-    return SimpleDateFormat(pattern, Locale.getDefault()).format(Date())
+    return ClockFormatSetting.formatTime(context, Date(now))
 }
 
 /** Uses ConnectivityManager.NetworkCallback (not the deprecated

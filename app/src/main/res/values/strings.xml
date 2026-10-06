@@ -23,6 +23,8 @@
     <string name="tap_feedback_hint">Short tick sound when you tap a scene, button, or dot — matches the device\'s own Android menus.</string>
     <string name="long_press_duration">Long-press duration</string>
     <string name="long_press_duration_hint">How long to hold a remote button before its long-press action fires.</string>
+    <string name="clock_24_hour">24-hour clock</string>
+    <string name="clock_24_hour_hint">Off shows 9:41 PM, on shows 21:41. Every clock on the remote follows this.</string>
     <string name="android_settings_more">More Android settings</string>
     <string name="stock_astrion_settings">Stock Astrion settings</string>
     <string name="stock_astrion_app">Stock Astrion app (HaRemote)</string>

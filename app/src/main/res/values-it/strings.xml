@@ -23,6 +23,8 @@
     <string name="tap_feedback_hint">Breve suono quando tocchi una scena, pulsante o punto — corrisponde ai menu Android del dispositivo.</string>
     <string name="long_press_duration">Durata pressione prolungata</string>
     <string name="long_press_duration_hint">Quanto tenere premuto un tasto del telecomando prima che scatti la sua azione di pressione prolungata.</string>
+    <string name="clock_24_hour">Orologio 24 ore</string>
+    <string name="clock_24_hour_hint">Disattivato: 9:41 PM, attivato: 21:41. Tutti gli orologi del telecomando seguono questa impostazione.</string>
     <string name="android_settings_more">Altre impostazioni Android</string>
     <string name="stock_astrion_settings">Impostazioni Astrion originali</string>
     <string name="stock_astrion_app">App Astrion originale (HaRemote)</string>
