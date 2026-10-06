@@ -29,13 +29,16 @@ import androidx.compose.runtime.setValue
  * [onUserInteraction], meant to be called from the Activity's own
  * override of the same name — the standard Android hook for "the user is
  * still there" regardless of which view or Compose node actually
- * consumed the touch), back up immediately on the next one.
+ * consumed the touch), back up immediately on the next one. The timer
+ * only dims if [autoDim] still says so when it fires: MainActivity turns
+ * that off while the clock screensaver is enabled, since the screensaver is
+ * then the docked remote's idle screen and should stay readable.
  *
  * Extracted out of MainActivity — which was starting to accumulate a lot
  * of unrelated concerns in one place — so this one feature's state,
  * receiver, and timer live somewhere they can be read start to finish.
  */
-class ChargeDockMonitor(private val activity: Activity) {
+class ChargeDockMonitor(private val activity: Activity, private val autoDim: () -> Boolean = { true }) {
 
     data class State(val isCharging: Boolean, val isDocked: Boolean)
 
@@ -45,7 +48,7 @@ class ChargeDockMonitor(private val activity: Activity) {
         private set
 
     private val handler = Handler(Looper.getMainLooper())
-    private val dimRunnable = Runnable { applyDimmed(true) }
+    private val dimRunnable = Runnable { if (autoDim()) applyDimmed(true) }
 
     private val receiver =
         object : BroadcastReceiver() {

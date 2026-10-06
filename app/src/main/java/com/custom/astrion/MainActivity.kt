@@ -18,6 +18,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
@@ -44,14 +45,15 @@ import com.custom.astrion.config.HotkeyConfig
 import com.custom.astrion.config.IrDatabaseRuntime
 import com.custom.astrion.config.IrStepConfig
 import com.custom.astrion.config.IrTarget
-import com.custom.astrion.config.JsonPlain
+import com.custom.astrion.config.LongPressSetting
 import com.custom.astrion.config.RemoteSettings
+import com.custom.astrion.config.ScreensaverSetting
 import com.custom.astrion.extender.ExtenderRegistry
 import com.custom.astrion.ha.HaClient
-import com.custom.astrion.ha.ServiceCall
 import com.custom.astrion.harmony.HarmonyHubRegistry
 import com.custom.astrion.input.HardwareKey
 import com.custom.astrion.input.HardwareKeyRouter
+import com.custom.astrion.input.MuteToggle
 import com.custom.astrion.ui.ChargingScreen
 import com.custom.astrion.ui.Dashboard
 import com.custom.astrion.ui.DashboardActivityCallbacks
@@ -60,6 +62,7 @@ import com.custom.astrion.ui.DashboardNavigation
 import com.custom.astrion.ui.DashboardRegistries
 import com.custom.astrion.ui.DashboardUiState
 import com.custom.astrion.ui.ProvideTheme
+import com.custom.astrion.ui.ScreensaverLayer
 import com.custom.astrion.ui.VolumeHotkeyTrigger
 import com.custom.astrion.ui.toColors
 import com.custom.astrion.web.ConfigServer
@@ -84,7 +87,6 @@ class MainActivity : ComponentActivity() {
         const val KEY_TAG = "AstrionKeys"
         const val MOTION_TAG = "MotionWake"
         const val SCREEN_TAG = "ScreenTimeout"
-        const val LONG_PRESS_MS = 1500L
         const val TILT_WAKE_DEG = 30f
         const val LIN_ACC_WAKE = 2.5f
         const val MOTION_CONSECUTIVE_N = 3
@@ -297,7 +299,16 @@ class MainActivity : ComponentActivity() {
      * single delegate here rather than inline so this class doesn't
      * accumulate yet another self-contained feature's receiver/state/timer
      * on top of everything else already here. */
-    private val chargeDockMonitor = ChargeDockMonitor(this)
+    private val chargeDockMonitor = ChargeDockMonitor(this, autoDim = { !ScreensaverSetting.isEnabled(this) })
+
+    /** See ScreensaverController.kt — the big-clock screensaver's idle timer
+     * and its wake-only first touch/press; it wires itself up from this
+     * Activity's lifecycle, the composition below only draws it. */
+    private val screensaver = ScreensaverController(this)
+
+    /** See MuteToggle.kt — turns hotkeys into HA calls, flipping a
+     * media_player.volume_mute call from the player's live mute state. */
+    private val muteToggle = MuteToggle(SystemClock::elapsedRealtime)
 
     /** Any touch/key event anywhere in the Activity, regardless of which
      * view (or Compose node) actually consumed it. */
@@ -596,10 +607,11 @@ class MainActivity : ComponentActivity() {
                         onStopActivityReady = { fn -> stopActivityFn = fn }
                     )
                 )
+                val theme = remember(dashboard.config.theme) { dashboard.config.theme.toColors() }
                 if (isDocked) {
-                    val theme = remember(dashboard.config.theme) { dashboard.config.theme.toColors() }
                     ProvideTheme(theme) { ChargingScreen(dimmed = chargeDockMonitor.dimmed) }
                 }
+                ScreensaverLayer(screensaver, theme, charging = chargeDockMonitor.state.isCharging)
             }
         }
     }
@@ -674,10 +686,11 @@ class MainActivity : ComponentActivity() {
      * fallback on [PageConfig.parentKey] — but only if that key isn't
      * already claimed by one of the hotkeys just bound above, so an AV page
      * that binds its own hotkey on the same key (e.g. a custom HOME action)
-     * is never overridden by the fallback. */
+     * is never overridden by the fallback. When neither binds MUTE, it gets
+     * MuteToggle.withDefault's mute toggle. */
     private fun rebindHotkeysForCurrentPage() {
         val page = dashboard.config.pages.getOrNull(currentPageIndex)
-        val mergedShort = mergeHotkeys(dashboard.config.hotkeys, page?.hotkeys.orEmpty())
+        val mergedShort = MuteToggle.withDefault(mergeHotkeys(dashboard.config.hotkeys, page?.hotkeys.orEmpty()), page)
         val mergedLong = mergeHotkeys(dashboard.config.longHotkeys, page?.longHotkeys.orEmpty())
         bindHotkeys(mergedShort, mergedLong)
 
@@ -824,10 +837,7 @@ class MainActivity : ComponentActivity() {
         }
 
         val service = hk.service ?: return false
-        val domain = service.substringBefore('.')
-        val svc = service.substringAfter('.')
-        val data = hk.data.mapValues { JsonPlain.toJson(it.value) }
-        client.callService(ServiceCall(domain, svc, hk.entityId, data))
+        client.callService(muteToggle.callFor(hk, service, client.entities.value))
         maybeTriggerVolumePopup(hk)
         return true
     }
@@ -902,7 +912,7 @@ class MainActivity : ComponentActivity() {
                                 longH.invoke()
                             }
                         pendingLong = r
-                        keyHandler.postDelayed(r, LONG_PRESS_MS)
+                        keyHandler.postDelayed(r, LongPressSetting.load(this))
                     }
                 } else {
                     fireButtonTap()

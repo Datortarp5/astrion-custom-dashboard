@@ -162,6 +162,13 @@ import org.json.JSONObject
  *                        in progress rather than layering sounds.
  *  POST /ring/stop         cancel an in-progress /ring immediately and
  *                        restore the original alarm volume.
+ *  GET  /alarms           the remote's alarms, when each rings next and the
+ *                        sounds an alarm can play
+ *  POST /alarms           add an alarm (form fields `time`, `days`, `enabled`,
+ *                        `label`, `sound`, `volume`, `snooze_minutes`)
+ *  POST /alarms/update    change alarm `id` (only the fields posted)
+ *  POST /alarms/delete    delete alarm `id` — all four in [AlarmRoutes], for
+ *                        the companion HA integration's alarm entities
  *
  * Deliberately has no auth — this device is assumed to live on a trusted
  * home LAN, the same assumption Home Assistant itself makes for local
@@ -197,6 +204,8 @@ class ConfigServer(
 ) : NanoHTTPD(8080) {
     @Volatile
     private var lastResult: UpdateChecker.CheckResult? = null
+
+    private val alarmRoutes = AlarmRoutes(context)
 
     // ---- ring ("find my remote") state ------------------------------------
     // All three only ever touched from NanoHTTPD's request-handling threads
@@ -258,6 +267,14 @@ class ConfigServer(
             "/activities/stop" -> if (method == Method.POST) handleStopActivity(session) else methodNotAllowed()
             "/ring" -> if (method == Method.POST) handleRing(session) else methodNotAllowed()
             "/ring/stop" -> if (method == Method.POST) handleStopRing() else methodNotAllowed()
+            "/alarms" ->
+                when (method) {
+                    Method.GET -> alarmRoutes.list()
+                    Method.POST -> alarmRoutes.add(session)
+                    else -> methodNotAllowed()
+                }
+            "/alarms/update" -> if (method == Method.POST) alarmRoutes.update(session) else methodNotAllowed()
+            "/alarms/delete" -> if (method == Method.POST) alarmRoutes.delete(session) else methodNotAllowed()
             else ->
                 when {
                     uri.startsWith("/builder/") ->

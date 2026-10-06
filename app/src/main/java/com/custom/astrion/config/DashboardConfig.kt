@@ -169,7 +169,6 @@ object DashboardConfig {
                         options =
                         mapOf(
                             "entity_id" to WEATHER,
-                            "time_format" to 12,
                             "forecast_rows" to 2,
                             "calendar_entity" to CALENDAR
                         )
