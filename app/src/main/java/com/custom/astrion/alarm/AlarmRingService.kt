@@ -26,7 +26,9 @@ import kotlinx.coroutines.flow.StateFlow
  * Rings alarms: plays the sound ([AlarmPlayer]), keeps the remote awake,
  * turns the screen on and opens [AlarmRingActivity], with a notification
  * carrying Snooze/Dismiss as the way back to it. A foreground service, so
- * the ringing doesn't depend on any screen staying open.
+ * the ringing doesn't depend on any screen staying open. The notification's
+ * buttons go through [AlarmReceiver] rather than straight to this service:
+ * a service that opens activities mustn't be what a notification starts.
  *
  * Snooze sets each ringing alarm to ring again after its own snooze length;
  * dismiss just stops (an alarm that doesn't repeat already turned itself off
@@ -177,8 +179,8 @@ class AlarmRingService : Service() {
                 .setOngoing(true)
                 .setContentIntent(pending(0, ringScreenIntent(), activity = true))
                 .setFullScreenIntent(pending(1, ringScreenIntent(), activity = true), true)
-                .addAction(0, getString(R.string.alarm_snooze), pending(2, command(this, ACTION_SNOOZE), activity = false))
-                .addAction(0, getString(R.string.alarm_dismiss), pending(3, command(this, ACTION_DISMISS), activity = false))
+                .addAction(0, getString(R.string.alarm_snooze), pending(2, AlarmReceiver.answer(this, snooze = true), activity = false))
+                .addAction(0, getString(R.string.alarm_dismiss), pending(3, AlarmReceiver.answer(this, snooze = false), activity = false))
                 .build()
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK else 0
         ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, type)
@@ -192,7 +194,7 @@ class AlarmRingService : Service() {
         return if (activity) {
             PendingIntent.getActivity(this, requestCode, intent, flags)
         } else {
-            PendingIntent.getService(this, requestCode, intent, flags)
+            PendingIntent.getBroadcast(this, requestCode, intent, flags)
         }
     }
 }

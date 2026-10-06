@@ -35,14 +35,19 @@
 
     <!-- Alarms (alarm/): exact alarm clocks, a foreground service that plays the sound,
         and a full-screen ringing screen. The HA100's Android 8.1 grants all of these
-        without asking; the newer ones only matter on newer Android. -->
+        without asking; the newer ones only matter on newer Android. SCHEDULE_EXACT_ALARM
+        and USE_FULL_SCREEN_INTENT are app-op permissions the user can grant in Settings,
+        not system-only ones, so lint's ProtectedPermissions doesn't apply to them. -->
     <uses-permission
         android:name="android.permission.SCHEDULE_EXACT_ALARM"
-        android:maxSdkVersion="32" />
+        android:maxSdkVersion="32"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission
+        android:name="android.permission.USE_FULL_SCREEN_INTENT"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Package visibility (Android 11+; the HA100's Android 8.1 sees everything anyway):

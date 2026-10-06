@@ -7,11 +7,28 @@ import android.util.Log
 
 /**
  * Android's alarm clock went off (see [AlarmScheduler]): mark the alarms as
- * rung, schedule whatever comes after them, and start the ringing.
+ * rung, schedule whatever comes after them, and start the ringing. Also
+ * takes the Snooze/Dismiss buttons of the ringing notification ([answer]).
  */
 class AlarmReceiver : BroadcastReceiver() {
+    companion object {
+        private const val ACTION_SNOOZE = "com.custom.astrion.alarm.SNOOZE_PRESSED"
+        private const val ACTION_DISMISS = "com.custom.astrion.alarm.DISMISS_PRESSED"
+
+        /** The broadcast a notification button sends to snooze or dismiss what's ringing. */
+        fun answer(context: Context, snooze: Boolean): Intent =
+            Intent(context, AlarmReceiver::class.java).setAction(if (snooze) ACTION_SNOOZE else ACTION_DISMISS)
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != AlarmScheduler.ACTION_FIRE) return
+        when (intent.action) {
+            AlarmScheduler.ACTION_FIRE -> fire(context, intent)
+            ACTION_SNOOZE -> AlarmRingService.snooze(context)
+            ACTION_DISMISS -> AlarmRingService.dismiss(context)
+        }
+    }
+
+    private fun fire(context: Context, intent: Intent) {
         val dueAt = intent.getLongExtra(AlarmScheduler.EXTRA_AT, 0L)
         val ids = intent.getIntArrayExtra(AlarmScheduler.EXTRA_IDS)?.filter { AlarmStore.get(context, it) != null }.orEmpty()
         Log.i("AlarmReceiver", "Alarm $ids due at $dueAt")

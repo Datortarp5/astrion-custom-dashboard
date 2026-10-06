@@ -1,5 +1,6 @@
 package com.custom.astrion.alarm
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -76,6 +77,9 @@ class AlarmRingActivity : ComponentActivity() {
         }
     }
 
+    // Lint flags any dispatchKeyEvent override because androidx.core's ComponentActivity is
+    // @RestrictTo; overriding the platform Activity method is fine (MainActivity does the same).
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_UP) AlarmRingService.snooze(this)
         return true
