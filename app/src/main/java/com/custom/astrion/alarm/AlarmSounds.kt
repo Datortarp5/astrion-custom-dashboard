@@ -2,6 +2,7 @@ package com.custom.astrion.alarm
 
 import android.content.Context
 import android.media.RingtoneManager
+import android.os.SystemClock
 import android.util.Log
 import com.custom.astrion.R
 
@@ -15,6 +16,21 @@ data class AlarmSound(val id: String, val title: String)
  * database, so call it off the main thread.
  */
 object AlarmSounds {
+    private const val RECENT_MS = 5 * 60_000L
+
+    @Volatile
+    private var cached: Pair<Long, List<AlarmSound>>? = null
+
+    /**
+     * [available], reused for a few minutes: Home Assistant asks for the list
+     * on every poll, and installed sounds hardly ever change.
+     */
+    fun recent(context: Context): List<AlarmSound> {
+        val now = SystemClock.elapsedRealtime()
+        cached?.let { (at, sounds) -> if (now - at < RECENT_MS) return sounds }
+        return available(context).also { cached = now to it }
+    }
+
     fun available(context: Context): List<AlarmSound> {
         val builtIn =
             listOf(
