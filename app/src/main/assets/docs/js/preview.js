@@ -403,11 +403,10 @@ function renderPreview() {
         </div>`;
     } else if (card.type === 'clock_weather') {
       const o = card.options || {};
-      const is24 = o.time_format === 24;
+      // 12h/24h is the device's Settings switch, not a card option; the
+      // preview follows this browser's locale, like the status bar clock.
       const now = new Date();
-      const timeStr = is24
-        ? now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-        : now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const forecastRows = o.forecast_rows ?? 4;
       const shown = WEATHER_MOCK.forecast.slice(0, forecastRows);
       const temps = shown.flatMap(f => [f.low, f.high]);

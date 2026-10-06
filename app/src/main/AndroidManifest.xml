@@ -33,6 +33,21 @@
     <!-- Update permissions -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- Package visibility (Android 11+; the HA100's Android 8.1 sees everything anyway):
+        lets AndroidSettingsShortcuts.kt check which Settings screens exist and find the
+        stock HaRemote launcher among the home/launcher apps. -->
+    <queries>
+        <package android:name="com.android.settings" />
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:name=".AstrionApp"
         android:allowBackup="true"

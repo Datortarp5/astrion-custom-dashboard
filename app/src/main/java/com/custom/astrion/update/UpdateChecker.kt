@@ -23,9 +23,10 @@ import okhttp3.Request
  */
 object UpdateChecker {
     // Public repo hosting signed release APKs — not a secret, just where
-    // prebuilt community releases get published. MUST be your own
-    // "owner/repo" — the placeholder below will always report "no update".
-    private const val REPO = "dckiller51/astrion-custom-dashboard"
+    // prebuilt releases get published (by .github/workflows/release.yml).
+    // Release APKs here are signed with this fork's own key, so they only
+    // install over builds from this same repo.
+    private const val REPO = "Datortarp5/astrion-custom-dashboard"
     private const val API_URL = "https://api.github.com/repos/$REPO/releases/latest"
     private const val BETA_API_URL = "https://api.github.com/repos/$REPO/releases/tags/dev-latest"
 
