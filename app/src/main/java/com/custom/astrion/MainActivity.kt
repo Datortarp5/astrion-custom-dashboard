@@ -45,7 +45,9 @@ import com.custom.astrion.config.IrDatabaseRuntime
 import com.custom.astrion.config.IrStepConfig
 import com.custom.astrion.config.IrTarget
 import com.custom.astrion.config.JsonPlain
+import com.custom.astrion.config.LongPressSetting
 import com.custom.astrion.config.RemoteSettings
+import com.custom.astrion.config.ScreensaverSetting
 import com.custom.astrion.extender.ExtenderRegistry
 import com.custom.astrion.ha.HaClient
 import com.custom.astrion.ha.ServiceCall
@@ -60,6 +62,7 @@ import com.custom.astrion.ui.DashboardNavigation
 import com.custom.astrion.ui.DashboardRegistries
 import com.custom.astrion.ui.DashboardUiState
 import com.custom.astrion.ui.ProvideTheme
+import com.custom.astrion.ui.ScreensaverLayer
 import com.custom.astrion.ui.VolumeHotkeyTrigger
 import com.custom.astrion.ui.toColors
 import com.custom.astrion.web.ConfigServer
@@ -84,7 +87,6 @@ class MainActivity : ComponentActivity() {
         const val KEY_TAG = "AstrionKeys"
         const val MOTION_TAG = "MotionWake"
         const val SCREEN_TAG = "ScreenTimeout"
-        const val LONG_PRESS_MS = 1500L
         const val TILT_WAKE_DEG = 30f
         const val LIN_ACC_WAKE = 2.5f
         const val MOTION_CONSECUTIVE_N = 3
@@ -297,7 +299,12 @@ class MainActivity : ComponentActivity() {
      * single delegate here rather than inline so this class doesn't
      * accumulate yet another self-contained feature's receiver/state/timer
      * on top of everything else already here. */
-    private val chargeDockMonitor = ChargeDockMonitor(this)
+    private val chargeDockMonitor = ChargeDockMonitor(this, autoDim = { !ScreensaverSetting.isEnabled(this) })
+
+    /** See ScreensaverController.kt — the big-clock screensaver's idle timer
+     * and its wake-only first touch/press; it wires itself up from this
+     * Activity's lifecycle, the composition below only draws it. */
+    private val screensaver = ScreensaverController(this)
 
     /** Any touch/key event anywhere in the Activity, regardless of which
      * view (or Compose node) actually consumed it. */
@@ -596,10 +603,11 @@ class MainActivity : ComponentActivity() {
                         onStopActivityReady = { fn -> stopActivityFn = fn }
                     )
                 )
+                val theme = remember(dashboard.config.theme) { dashboard.config.theme.toColors() }
                 if (isDocked) {
-                    val theme = remember(dashboard.config.theme) { dashboard.config.theme.toColors() }
                     ProvideTheme(theme) { ChargingScreen(dimmed = chargeDockMonitor.dimmed) }
                 }
+                ScreensaverLayer(screensaver, theme, charging = chargeDockMonitor.state.isCharging)
             }
         }
     }
@@ -902,7 +910,7 @@ class MainActivity : ComponentActivity() {
                                 longH.invoke()
                             }
                         pendingLong = r
-                        keyHandler.postDelayed(r, LONG_PRESS_MS)
+                        keyHandler.postDelayed(r, LongPressSetting.load(this))
                     }
                 } else {
                     fireButtonTap()

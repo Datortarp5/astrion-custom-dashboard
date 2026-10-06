@@ -354,14 +354,10 @@ function updateCardFormInputs() {
   } else if (type === 'clock_weather') {
     container.innerHTML = `
       ${haEntityFieldHtml('weather', 'optEntityId', 'Weather')}
-      <label>Time format</label>
-      <select id="optTimeFormat">
-        <option value="12">12-hour (e.g., 9:41 PM)</option>
-        <option value="24">24-hour (e.g., 21:41)</option>
-      </select>
       <label>Forecast rows (days shown below the clock)</label><input type="number" id="optForecastRows" value="4" min="0" max="10">
       <label>Calendar entity (optional — shows today's event under the date)</label><input type="text" id="optCalendarEntity" placeholder="e.g., calendar.family">
       <div class="hint">The condition text ("Partly cloudy", "Rainy"...) is translated automatically via assets/ha_labels/&lt;lang&gt;.json — no field needed here.</div>
+      <div class="hint">12-hour or 24-hour time is set once for every clock on the remote, with the "24-hour clock" switch in its Settings panel.</div>
     `;
   } else if (type === 'vacuum') {
     container.innerHTML = `
@@ -1045,7 +1041,6 @@ function fillCardForm(card) {
     document.getElementById('optMuteEntity').value = o.mute_entity || '';
   } else if (type === 'clock_weather') {
     setEntitySelectValue('optEntityId', o.entity_id);
-    document.getElementById('optTimeFormat').value = (o.time_format === 24) ? '24' : '12';
     document.getElementById('optForecastRows').value = (o.forecast_rows ?? 4);
     document.getElementById('optCalendarEntity').value = o.calendar_entity || '';
   } else if (type === 'vacuum') {
@@ -1270,7 +1265,6 @@ function addCardToPage() {
     if (muteEntity) newCard.options.mute_entity = muteEntity;
   } else if (type === 'clock_weather') {
     newCard.options.entity_id = document.getElementById('optEntityId').value.trim() || 'weather.forecast_home';
-    newCard.options.time_format = parseInt(document.getElementById('optTimeFormat').value, 10) || 12;
     newCard.options.forecast_rows = parseInt(document.getElementById('optForecastRows').value, 10);
     if (isNaN(newCard.options.forecast_rows)) newCard.options.forecast_rows = 4;
     const calendarEntity = document.getElementById('optCalendarEntity').value.trim();
