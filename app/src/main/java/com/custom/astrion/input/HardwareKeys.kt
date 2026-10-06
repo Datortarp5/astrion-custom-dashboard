@@ -43,6 +43,9 @@ enum class HardwareKey {
 
     companion object {
         // Android keycode -> logical button, straight from device_key_code.json (HA100).
+        // That file lists both 82 and 91 as "mute": 91 is always MUTE here,
+        // 82 stays MAIN (Menu) but acts as MUTE while nothing is bound to
+        // MAIN (see HardwareKeyRouter.resolve).
         private val MAP: Map<Int, HardwareKey> =
             mapOf(
                 4 to BACK,
@@ -58,6 +61,7 @@ enum class HardwareKey {
                 22 to RIGHT,
                 23 to CENTER,
                 82 to MAIN,
+                91 to MUTE,
                 164 to MUTE,
                 133 to VOICE,
                 134 to REWIND,
@@ -106,13 +110,22 @@ class HardwareKeyRouter {
         longHandlers.clear()
     }
 
-    fun shortHandler(code: Int): (() -> Boolean)? {
+    /** The logical button [code] acts as right now. The HA100's MUTE key
+     * may arrive as keycode 82, which is mapped to MAIN (Menu), so MAIN
+     * falls back to MUTE's bindings while nothing is bound to MAIN itself. */
+    fun resolve(code: Int): HardwareKey {
         val key = HardwareKey.fromKeyCode(code)
+        val mainUnbound = key == HardwareKey.MAIN && !isShortBound(key) && !isLongBound(key)
+        return if (mainUnbound) HardwareKey.MUTE else key
+    }
+
+    fun shortHandler(code: Int): (() -> Boolean)? {
+        val key = resolve(code)
         return if (key == HardwareKey.UNKNOWN) null else shortHandlers[key]
     }
 
     fun longHandler(code: Int): (() -> Boolean)? {
-        val key = HardwareKey.fromKeyCode(code)
+        val key = resolve(code)
         return if (key == HardwareKey.UNKNOWN) null else longHandlers[key]
     }
 }
